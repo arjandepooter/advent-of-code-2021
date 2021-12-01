@@ -1,33 +1,27 @@
 import sys
+from typing import List
 
 
 def read_input():
     return [int(line) for line in sys.stdin.readlines() if line.strip()]
 
 
-def part_1(data):
-    current = data[0]
+def number_of_ascending_pairs(l: List[int], offset: int):
     acc = 0
 
-    for n in data:
-        if n > current:
+    for (a, b) in zip(l, l[offset:]):
+        if a < b:
             acc += 1
-        current = n
 
     return acc
+
+
+def part_1(data):
+    return number_of_ascending_pairs(data, 1)
 
 
 def part_2(data):
-    current = sum(data[:3])
-    acc = 0
-
-    for (a, b, c) in zip(data, data[1:], data[2:]):
-        if (a + b + c) > current:
-            acc += 1
-
-        current = a + b + c
-
-    return acc
+    return number_of_ascending_pairs(data, 3)
 
 
 data = read_input()
