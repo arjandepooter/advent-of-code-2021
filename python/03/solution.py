@@ -34,30 +34,21 @@ def part_1(numbers, width):
     return gamma * eps
 
 
-def reduce_numbers_by_bit_count(numbers, width, predicate):
+def reduce_numbers_by_bit_occurence(numbers, width, most):
     offset = 0
 
     while len(numbers) > 1:
         position = width - offset - 1
         zeroes, ones = bits_per_position(numbers, position)
-        filter_on_bit = int(predicate(zeroes, ones))
-        numbers = [n for n in numbers if (n >> position) & 1 == filter_on_bit]
+        numbers = [n for n in numbers if (n >> position) & 1 ^ (ones >= zeroes) ^ most]
         offset += 1
 
     return numbers[0]
 
 
 def part_2(numbers, width):
-    oxygen = reduce_numbers_by_bit_count(
-        numbers[::],
-        width,
-        lambda zeroes, ones: ones >= zeroes,
-    )
-    co2 = reduce_numbers_by_bit_count(
-        numbers[::],
-        width,
-        lambda zeroes, ones: zeroes > ones,
-    )
+    oxygen = reduce_numbers_by_bit_occurence(numbers[::], width, True)
+    co2 = reduce_numbers_by_bit_occurence(numbers[::], width, False)
 
     return oxygen * co2
 
