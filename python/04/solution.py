@@ -2,17 +2,19 @@ import sys
 
 
 def parse_card(block):
-    result = []
+    acc = []
     for line in block.strip().split("\n"):
-        if line.strip():
-            result.append([int(n) for n in line.strip().split()])
-    return [item for sublist in result for item in sublist]
+        for number in line.strip().split():
+            acc.append(int(number))
+    return acc
 
 
 def read_input():
     blocks = sys.stdin.read().split("\n\n")
+
     numbers = [int(n) for n in blocks[0].split(",")]
     cards = [parse_card(block) for block in blocks[1:] if block]
+
     return (numbers, cards)
 
 
@@ -33,8 +35,9 @@ def has_won(numbers, card):
 
 
 def get_score(numbers, card):
-    a = sum(n for n in card if n not in numbers)
-    return a * numbers[-1]
+    empty_spaces = sum(n for n in card if n not in numbers)
+    last_drawn = numbers[-1]
+    return empty_spaces * last_drawn
 
 
 def part_1(numbers, cards):
