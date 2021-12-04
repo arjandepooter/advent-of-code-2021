@@ -40,24 +40,24 @@ def get_score(numbers, card):
     return empty_spaces * last_drawn
 
 
+def won_after(numbers, card):
+    for i in range(len(numbers)):
+        if has_won(numbers[:i], card):
+            return i
+
+
 def part_1(numbers, cards):
-    drawn = 0
-    while True:
+    for drawn in range(len(numbers) + 1):
         for card in cards:
             if has_won(numbers[:drawn], card):
                 return get_score(numbers[:drawn], card)
-        drawn += 1
 
 
 def part_2(numbers, cards):
-    drawn = 0
-    while len(cards) > 1:
-        for card in cards:
-            if has_won(numbers[:drawn], card):
-                cards.remove(card)
-        drawn += 1
+    win_after = [(won_after(numbers, card), card) for card in cards]
+    drawn, card = max(win_after)
 
-    return get_score(numbers[: drawn - 1], cards[0])
+    return get_score(numbers[:drawn], card)
 
 
 data = read_input()
