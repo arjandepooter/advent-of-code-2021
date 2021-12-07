@@ -6,20 +6,17 @@ def read_input():
 
 
 def part_1(numbers):
-    numbers.sort()
-    median = numbers[len(numbers) // 2]
+    median = sorted(numbers)[len(numbers) // 2]
     return sum(abs(median - n) for n in numbers)
 
 
+def fuel_cost(crabs, mid):
+    return sum(abs(mid - n) * (abs(mid - n) + 1) // 2 for n in crabs)
+
+
 def part_2(numbers):
-    max_n, min_n = max(numbers), min(numbers)
-
-    fuel_costs = []
-    for m in range(min_n, max_n + 1):
-        fuel_cost = sum(abs(m - n) * (abs(m - n) + 1) // 2 for n in numbers)
-        fuel_costs.append(fuel_cost)
-
-    return min(fuel_costs)
+    average = sum(numbers) // len(numbers)
+    return min(fuel_cost(numbers, average), fuel_cost(numbers, average + 1))
 
 
 data = read_input()
