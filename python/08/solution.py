@@ -8,9 +8,10 @@ def parse_line(line):
 
 def read_input():
     lines = [line.strip() for line in sys.stdin.readlines() if line.strip()]
-    return ([parse_line(line) for line in lines],)
+    return [parse_line(line) for line in lines]
 
 
+# unique mapping between (number_of_segments, overlap with 1, overlap with 4, overlap with 7)
 OVERLAPS = {
     (6, 2, 3, 3): 0,
     (5, 1, 2, 2): 2,
@@ -20,18 +21,20 @@ OVERLAPS = {
     (6, 2, 4, 3): 9,
 }
 
+KNOWN_LENGTHS = {
+    2: 1,
+    3: 7,
+    4: 4,
+    7: 8,
+}
+
 
 def decode_line(signals, outs):
-    known = {}
-    for signal in signals:
-        if len(signal) == 2:
-            known[1] = signal
-        if len(signal) == 4:
-            known[4] = signal
-        if len(signal) == 3:
-            known[7] = signal
-        if len(signal) == 7:
-            known[8] = signal
+    known = {
+        KNOWN_LENGTHS[len(signal)]: signal
+        for signal in signals
+        if len(signal) in KNOWN_LENGTHS
+    }
 
     for signal in signals:
         if len(signal) not in (2, 3, 4, 7):
@@ -53,7 +56,7 @@ def part_1(data):
     acc = 0
     for _, out in data:
         for n in out:
-            if len(n) in [2, 3, 4, 7]:
+            if len(n) in KNOWN_LENGTHS:
                 acc += 1
     return acc
 
@@ -63,5 +66,5 @@ def part_2(data):
 
 
 data = read_input()
-print(f"Part 1: {part_1(*data)}")
-print(f"Part 2: {part_2(*data)}")
+print(f"Part 1: {part_1(data)}")
+print(f"Part 2: {part_2(data)}")
