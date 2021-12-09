@@ -2,6 +2,7 @@ import sys
 
 from collections import deque
 from functools import reduce
+from itertools import product
 
 
 def parse_line(line):
@@ -20,13 +21,11 @@ def iter_neighbours(data, x, y):
 
 
 def find_lowest_parts(data):
-    lowest_parts = []
-    for j in range(len(data)):
-        for i in range(len(data[0])):
-            if all(data[j][i] < data[y][x] for x, y in iter_neighbours(data, i, j)):
-                lowest_parts.append((i, j))
-
-    return lowest_parts
+    return [
+        (i, j)
+        for i, j in product(range(len(data)), range(len(data[0])))
+        if all(data[j][i] < data[y][x] for x, y in iter_neighbours(data, i, j))
+    ]
 
 
 def get_bassin_size(data, x, y):
@@ -38,12 +37,12 @@ def get_bassin_size(data, x, y):
 
         if (x, y) in visited:
             continue
-        visited.add((x, y))
 
         for nx, ny in iter_neighbours(data, x, y):
-            nn = data[ny][nx]
-            if nn != 9 and nn > data[y][x]:
+            if data[ny][nx] != 9:
                 queue.append((nx, ny))
+
+        visited.add((x, y))
 
     return len(visited)
 
