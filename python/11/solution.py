@@ -1,7 +1,6 @@
 import sys
-from collections import *
-from itertools import *
-from functools import *
+from collections import deque
+from itertools import count, product
 
 SIZE = 10
 
@@ -26,10 +25,7 @@ def iter_coords():
 
 
 def step(grid):
-    grid = [[n for n in line] for line in grid]
-    for i, j in iter_coords():
-        grid[i][j] += 1
-
+    grid = [[n + 1 for n in line] for line in grid]
     acc = 0
     queue = deque((i, j) for (i, j) in iter_coords() if grid[i][j] > 9)
 
@@ -59,7 +55,7 @@ def part_1(grid):
 def part_2(grid):
     for n in count(1):
         grid, flashes = step(grid)
-        if flashes == 100:
+        if flashes == SIZE * SIZE:
             return n
 
 
