@@ -12,35 +12,31 @@ def read_input():
     return edges
 
 
-def find_paths(data, current="start", visited=None, visited_small_twice=False):
+def find_number_of_paths(data, current="start", visited=None, visited_small_twice=True):
     if visited is None:
         visited = {current}
 
     if current == "end":
         return 1
 
-    acc = 0
-    for n in data.get(current, []):
-        if (
-            n.isupper()
-            or n not in visited
-            or (not visited_small_twice and n != "start")
-        ):
-            acc += find_paths(
-                data,
-                n,
-                visited | {current},
-                visited_small_twice or n.islower() and n in visited,
-            )
-    return acc
+    return sum(
+        find_number_of_paths(
+            data,
+            n,
+            visited | {current},
+            visited_small_twice or n.islower() and n in visited,
+        )
+        for n in data.get(current, [])
+        if n.isupper() or n not in visited or (not visited_small_twice and n != "start")
+    )
 
 
 def part_1(data):
-    return find_paths(data, visited_small_twice=True)
+    return find_number_of_paths(data)
 
 
 def part_2(data):
-    return find_paths(data)
+    return find_number_of_paths(data, visited_small_twice=False)
 
 
 data = read_input()
