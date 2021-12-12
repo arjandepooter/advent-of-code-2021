@@ -21,9 +21,6 @@ def find_paths(data, current="start", visited=None, visited_small_twice=False):
 
     acc = 0
     for n in data.get(current, []):
-        new_visits = visited.copy()
-        new_visits.add(n)
-
         if (
             n.isupper()
             or n not in visited
@@ -32,7 +29,7 @@ def find_paths(data, current="start", visited=None, visited_small_twice=False):
             acc += find_paths(
                 data,
                 n,
-                new_visits,
+                visited | {current},
                 visited_small_twice or n.islower() and n in visited,
             )
     return acc
