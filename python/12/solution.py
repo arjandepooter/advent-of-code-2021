@@ -12,10 +12,9 @@ def read_input():
     return edges
 
 
-def find_number_of_paths(data, current="start", visited=None, visited_small_twice=True):
-    if visited is None:
-        visited = {current}
-
+def find_number_of_paths(
+    data, current="start", visited=frozenset("start"), visited_small_twice=True
+):
     if current == "end":
         return 1
 
