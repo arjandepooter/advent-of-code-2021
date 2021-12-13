@@ -5,7 +5,8 @@ description = ""
 authors = ["Arjan de Pooter <mail@arjandepooter.nl>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.10,<3.11"
+numpy = "^1.21.4"
 
 [tool.poetry.dev-dependencies]
 black = "^21.11b1"
