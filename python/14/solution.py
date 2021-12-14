@@ -1,7 +1,5 @@
 import sys
-from collections import *
-from functools import *
-from itertools import *
+from functools import cache
 
 
 def read_input():
@@ -38,10 +36,6 @@ def counts(template, rules, steps):
     result[template[-1]] += 1
 
     return result
-
-
-def create(template, rules):
-    return template
 
 
 def part_1(template, rules):
