@@ -1,4 +1,5 @@
 import sys
+from collections import Counter
 from functools import cache, reduce
 
 
@@ -14,25 +15,18 @@ def read_input():
     return (template, dict(rules))
 
 
-def merge_counts(a, b):
-    c = {}
-    for k in set(a.keys()) | set(b.keys()):
-        c[k] = a.get(k, 0) + b.get(k, 0)
-    return c
-
-
 def counts(template, rules, steps):
     @cache
     def wrapped(a, b, steps):
         if steps == 0:
-            return {a: 1}
+            return Counter([a])
         m = rules[(a, b)]
-        return merge_counts(wrapped(a, m, steps - 1), wrapped(m, b, steps - 1))
+        return wrapped(a, m, steps - 1) + wrapped(m, b, steps - 1)
 
     return reduce(
-        lambda acc, pair: merge_counts(acc, wrapped(pair[0], pair[1], steps)),
+        lambda acc, pair: acc + wrapped(pair[0], pair[1], steps),
         zip(template, template[1:]),
-        {template[-1]: 1},
+        Counter([template[-1]]),
     )
 
 
