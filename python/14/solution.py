@@ -1,5 +1,5 @@
 import sys
-from functools import cache
+from functools import cache, reduce
 
 
 def read_input():
@@ -29,13 +29,11 @@ def counts(template, rules, steps):
         m = rules[(a, b)]
         return merge_counts(wrapped(a, m, steps - 1), wrapped(m, b, steps - 1))
 
-    result = {}
-    for a, b in zip(template, template[1:]):
-        result = merge_counts(result, wrapped(a, b, steps))
-
-    result[template[-1]] += 1
-
-    return result
+    return reduce(
+        lambda acc, pair: merge_counts(acc, wrapped(pair[0], pair[1], steps)),
+        zip(template, template[1:]),
+        {template[-1]: 1},
+    )
 
 
 def part_1(template, rules):
