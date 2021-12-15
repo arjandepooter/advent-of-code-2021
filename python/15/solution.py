@@ -1,7 +1,5 @@
 import sys
-from collections import *
-from functools import *
-from itertools import *
+from collections import deque
 
 
 def parse_line(line):
@@ -32,7 +30,7 @@ def grow_grid(grid, x=5):
     return new_grid
 
 
-def path(grid):
+def calc_smallest_risk(grid):
     queue = deque([(0, 0)])
     seen = {}
 
@@ -42,21 +40,21 @@ def path(grid):
 
         for ni, nj in iter_neighbours(grid, (i, j)):
             nv = grid[ni][nj] + v
-            if ((ni, nj) in seen and nv < seen[(ni, nj)]) or (ni, nj) not in seen:
+            if (ni, nj) not in seen or nv < seen[(ni, nj)]:
                 seen[(ni, nj)] = nv
                 queue.appendleft((ni, nj))
 
     return seen[(len(grid) - 1, len(grid[0]) - 1)]
 
 
-def part_1(data):
-    return path(data)
+def part_1(grid):
+    return calc_smallest_risk(grid)
 
 
-def part_2(data):
-    grid = grow_grid(data)
+def part_2(grid):
+    grid = grow_grid(grid)
 
-    return path(grid)
+    return calc_smallest_risk(grid)
 
 
 data = read_input()
