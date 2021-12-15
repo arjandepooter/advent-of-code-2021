@@ -1,5 +1,5 @@
 import sys
-from collections import deque
+from heapq import heapify, heappop, heappush
 
 
 def parse_line(line):
@@ -31,18 +31,18 @@ def grow_grid(grid, x=5):
 
 
 def calc_smallest_risk(grid):
-    queue = deque([(0, 0)])
+    queue = [(0, 0, 0)]
+    heapify(queue)
     seen = {}
 
     while len(queue):
-        i, j = queue.pop()
-        v = seen.get((i, j), 0)
+        v, i, j = heappop(queue)
 
         for ni, nj in iter_neighbours(grid, (i, j)):
             nv = grid[ni][nj] + v
             if (ni, nj) not in seen or nv < seen[(ni, nj)]:
                 seen[(ni, nj)] = nv
-                queue.appendleft((ni, nj))
+                heappush(queue, (nv, ni, nj))
 
     return seen[(len(grid) - 1, len(grid[0]) - 1)]
 
