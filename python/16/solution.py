@@ -1,24 +1,35 @@
 import sys
 from functools import reduce
+from typing import List, Tuple
 
 
-class Literal:
-    def __init__(self, version, value):
+class Package:
+    version: int
+
+    def get_version(self) -> int:
+        raise NotImplementedError()
+
+    def evaluate(self) -> int:
+        raise NotImplementedError()
+
+
+class Literal(Package):
+    def __init__(self, version: int, value: int):
         self.version = version
         self.value = value
 
     def __repr__(self) -> str:
         return f"Literal(v{self.version}, {self.value})"
 
-    def get_version(self):
+    def get_version(self) -> int:
         return self.version
 
-    def evaluate(self):
+    def evaluate(self) -> int:
         return self.value
 
 
-class Operator(Literal):
-    def __init__(self, version, type_, children):
+class Operator(Package):
+    def __init__(self, version: int, type_: int, children: List[Package]):
         self.version = version
         self.type_ = type_
         self.children = children
@@ -26,101 +37,93 @@ class Operator(Literal):
     def __repr__(self) -> str:
         return f"Operator(v{self.version}, {self.type_}, [{', '.join(str(child) for child in self.children)}])"
 
-    def get_version(self):
+    def get_version(self) -> int:
         return self.version + sum(
-            [child.get_version() for child in self.children if child]
+            [child.get_version() for child in self.children]
         )
 
-    def evaluate(self):
+    def evaluate(self) -> int:
         children = [child.evaluate() for child in self.children]
 
-        if self.type_ == 0:
-            return sum(children)
-        if self.type_ == 1:
-            return reduce(lambda a, b: a * b, children, 1)
-        if self.type_ == 2:
-            return min(children)
-        if self.type_ == 3:
-            return max(children)
-        if self.type_ == 5:
-            return int(children[0] > children[1])
-        if self.type_ == 6:
-            return int(children[0] < children[1])
-        if self.type_ == 7:
-            return int(children[0] == children[1])
+        match self.type_:            
+            case 0:
+                return sum(children)
+            case 1:
+                return reduce(lambda a, b: a * b, children, 1)
+            case 2:
+                return min(children)
+            case 3:
+                return max(children)
+            case 5:
+                return int(children[0] > children[1])
+            case 6:
+                return int(children[0] < children[1])
+            case 7:
+                return int(children[0] == children[1])
+            case _:
+                return 0
 
-
-def read_input():
+def read_input() -> List[bool]:
     line = [line.strip() for line in sys.stdin.readlines() if line.strip()][0]
-    result = []
+    result: List[bool] = []
     for n in line:
-        b = int(n, 16)
-        result += list((bin(b)[2:]).zfill(4))
+        result += [n == '1' for n in bin(int(n, 16))[2:].zfill(4)]
     return result
 
+def to_int(bits: List[bool]) -> int:
+    return reduce(lambda acc, b: (acc << 1) | b,  bits, 0)
 
-def to_int(b):
-    return int("".join(b), 2)
-
-
-def read_literal(data):
-    acc = []
-    s = 0
+def read_varint(data: List[bool]) -> Tuple[int, List[bool]]:
+    acc = 0
+    offset = 0
 
     while True:
-        a = data[s + 1 : s + 5]
-        acc += a
-        if len(a) == 0 or data[s] == "0":
+        acc = (acc << 4) + to_int(data[offset + 1 : offset + 5])
+        cont = data[offset]
+        offset += 5
+        if not cont:
             break
-        s += 5
 
-    return to_int(acc), data[s + 5 :]
-
-
-def read_int(data, length):
-    version = data[:length]
-
-    return to_int(version), data[length:]
+    return acc, data[offset: ]
 
 
-def decode(data):
-    if len(data) < 6:
-        return None, []
+def read_int(data: List[bool], length: int) -> Tuple[int, List[bool]]:
+    return to_int(data[:length]), data[length:]
 
+
+def decode(data: List[bool]) -> Tuple[Package, List[bool]]:
     version, data = read_int(data, 3)
     type_, data = read_int(data, 3)
-
+    
     if type_ == 4:
-        value, data = read_literal(data)
+        value, data = read_varint(data)
         return Literal(version, value), data
+
+    type_id, data = read_int(data, 1)
+
+    children: List[Package] = []
+    if type_id == 0:
+        sub_length, data = read_int(data, 15)
+        sub_data, data = data[:sub_length], data[sub_length:]
+        
+        while len(sub_data):
+            child, sub_data = decode(sub_data)
+            children.append(child)
     else:
-        type_id, data = read_int(data, 1)
+        n, data = read_int(data, 11)
+        for _ in range(n):
+            child, data = decode(data)
+            children.append(child)
 
-        if type_id == 0:
-            sub_length, data = read_int(data, 15)
-            sub_data = data[:sub_length]
-            data = data[sub_length:]
-            children = []
-            while len(sub_data):
-                child, sub_data = decode(sub_data)
-                children.append(child)
-            return Operator(version, type_, children), data
-        elif type_id == 1:
-            n, data = read_int(data, 11)
-            children = []
-            for _ in range(n):
-                child, data = decode(data)
-                children.append(child)
-            return Operator(version, type_, children), data
+    return Operator(version, type_, children), data
 
-
-def part_1(data):
+def part_1(data: List[bool]) -> int:
     package, _ = decode(data)
 
     return package.get_version()
 
 
-def part_2(data):
+def part_2(data: List[bool]) -> int:
     package, _ = decode(data)
 
     return package.evaluate()
