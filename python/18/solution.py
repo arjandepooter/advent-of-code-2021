@@ -1,8 +1,8 @@
 import sys
 
 from functools import reduce
-from itertools import combinations, takewhile
-from typing import Callable, Iterator, List, Optional, Union
+from itertools import combinations, takewhile, tee
+from typing import Callable, Iterator, List, Optional, Tuple, Union
 
 Data = Union[int, List["Data"]]
 
@@ -59,19 +59,12 @@ class Node:
         node.left = node.right = None
         node.value = 0
 
-        left_nodes = list(reversed(list(takewhile(lambda n: n is not node, self))))
-        right_nodes = list(
-            reversed(list(takewhile(lambda n: n is not node, reversed(list(self)))))
-        )
-
-        for left_node in left_nodes:
-            if left_node.value is not None:
-                left_node.value += left
-                break
-        for right_node in right_nodes:
-            if right_node.value is not None:
-                right_node.value += right
-                break
+        if left_node := next(self.left_value_nodes(node), None):
+            assert left_node.value is not None
+            left_node.value += left
+        if right_node := next(self.right_value_nodes(node), None):
+            assert right_node.value is not None
+            right_node.value += right
 
     def split(self):
         assert self.value is not None
@@ -92,6 +85,27 @@ class Node:
             and self.left.find_node(predicate, level + 1)
             or self.right
             and self.right.find_node(predicate, level + 1)
+        )
+
+    def left_value_nodes(self, node: "Node") -> Iterator["Node"]:
+        return reversed(
+            list(
+                value_node
+                for value_node in takewhile(lambda n: n is not node, self)
+                if value_node.value is not None
+            )
+        )
+
+    def right_value_nodes(self, node: "Node") -> Iterator["Node"]:
+
+        return reversed(
+            list(
+                value_node
+                for value_node in takewhile(
+                    lambda n: n is not node, reversed(list(self))
+                )
+                if value_node.value is not None
+            )
         )
 
     def __repr__(self) -> str:
@@ -129,7 +143,8 @@ def part_1(data: List[Data]) -> int:
 
 def part_2(data: List[Data]) -> int:
     return max(
-        (to_tree(a) + to_tree(b)).reduce().magnitude() for a, b in combinations(data, 2)
+        (to_tree(number1) + to_tree(number2)).reduce().magnitude()
+        for number1, number2 in combinations(data, 2)
     )
 
 
