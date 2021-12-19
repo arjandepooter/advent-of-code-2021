@@ -1,43 +1,22 @@
 import sys
+from collections import Counter
 from itertools import permutations, product
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
-
-
-Coord = Tuple[int, int, int]
-
-x_rot = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
-y_rot = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]])
-z_rot = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
-
-rotations = []
-for x in range(4):
-    for y in range(4):
-        rotations.append(
-            np.linalg.matrix_power(x_rot, x) @ np.linalg.matrix_power(y_rot, y)
-        )
-    for z in (1, 3):
-        rotations.append(
-            np.linalg.matrix_power(x_rot, x) @ np.linalg.matrix_power(z_rot, z)
-        )
 
 
 def parse_block(block):
     lines = block.split("\n")
-    scanner_num = int(lines[0].split()[-2])
+
     points = []
     for line in lines[1:]:
         if not line.strip():
             continue
-        x, y, z = line.split(",")
-        x, y, z = int(x), int(y), int(z)
+        x, y, z = [int(n) for n in line.split(",")]
         points.append(Point(x, y, z))
 
     return points
-
-
-def parse_line(line):
-    return line
 
 
 def read_input() -> List["Scanner"]:
@@ -47,17 +26,27 @@ def read_input() -> List["Scanner"]:
     return [Scanner(i, block) for i, block in enumerate(blocks)]
 
 
+x_rot = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
+y_rot = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]])
+z_rot = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+
+rotations = [
+    np.linalg.matrix_power(x_rot, x) @ np.linalg.matrix_power(y_rot, y)
+    for x, y in product(range(4), range(4))
+] + [
+    np.linalg.matrix_power(x_rot, x) @ np.linalg.matrix_power(z_rot, z)
+    for x, z in product(range(4), (1, 3))
+]
+
+
 class Point:
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
         self.z = z
 
-    def rotate(self, rotation):
-        return (self.x, self.y, self.z) @ rotation
-
-    def __matmul__(self, other):
-        return Point(*list((self.x, self.y, self.z) @ other))
+    def __matmul__(self, other) -> "Point":
+        return Point(*(list(self) @ other))
 
     def __sub__(self, other):
         return Point(self.x - other.x, self.y - other.y, self.z - other.z)
@@ -84,35 +73,34 @@ class Scanner:
     def __init__(self, scanner_id, points: List[Point]):
         self.scanner_id = scanner_id
         self.points = points
+        self.rotations = [
+            [point @ rotation for point in points] for rotation in rotations
+        ]
 
-    def rotated_points(self, rotation):
-        for point in self.points:
-            yield point @ rotation
+    def rotated_points(self, rotation: int) -> List[Point]:
+        return self.rotations[rotation]
 
     def __repr__(self):
         return f"Scanner({self.scanner_id})"
 
 
-def find_overlap(scanner1, scanner2, rotation):
-    points2 = set(scanner2.rotated_points(rotation))
-    for rotation in rotations:
-        points1 = list(scanner1.rotated_points(rotation))
+def find_overlap(
+    scanner1: Scanner, scanner2: Scanner, rotation: int
+) -> Optional[Tuple[Point, int]]:
+    points2 = scanner2.rotated_points(rotation)
 
-        diffs = (p2 - p1 for p1, p2 in product(points1, points2))
-        for diff in diffs:
-            if len([p1 for p1 in points1 if p1 + diff in points2]) >= 12:
-                return (diff, rotation)
+    for rotation in range(len(rotations)):
+        points1 = scanner1.rotated_points(rotation)
+        counts = Counter((p2 - p1 for p1, p2 in product(points1, points2)))
+        diff, max_count = counts.most_common(1)[0]
+        if max_count >= 12:
+            return (diff, rotation)
 
-    return None, None
 
-
-def find_scanner_offsets(scanners):
-    found = {
-        scanners[0]: (
-            Point(0, 0, 0),
-            rotations[0],
-        ),
-    }
+def find_scanner_offsets(
+    scanners: List[Scanner],
+) -> List[Tuple[Scanner, Tuple[Point, int]]]:
+    found: Dict[Scanner, Tuple[Point, int]] = {scanners[0]: (Point(0, 0, 0), 0)}
 
     while len(found) != len(scanners):
         for scanner1 in scanners:
@@ -120,8 +108,8 @@ def find_scanner_offsets(scanners):
                 continue
 
             for scanner2, (offset2, rotation2) in found.items():
-                offset1, rotation1 = find_overlap(scanner1, scanner2, rotation2)
-                if offset1 is not None and rotation1 is not None:
+                if result := find_overlap(scanner1, scanner2, rotation2):
+                    offset1, rotation1 = result
                     found[scanner1] = (offset1 + offset2, rotation1)
                     break
 
@@ -135,7 +123,6 @@ def solve(scanners: List[Scanner]):
     for scanner, (offset, rotation) in offsets:
         for point in scanner.rotated_points(rotation):
             points.add(point + offset)
-
     print(len(points))
 
     acc = 0
