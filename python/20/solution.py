@@ -12,24 +12,23 @@ def read_input():
 
 
 def iter_pixels(image, x, y, default):
-    for i in range(-1, 2):
-        for j in range(-1, 2):
-            nx, ny = x + j, y + i
-            if nx < 0 or ny < 0 or nx >= len(image) or ny >= len(image[nx]):
-                yield default
-            else:
-                yield image[y + i][x + j]
+    for i, j in product(range(-1, 2), range(-1, 2)):
+        nx, ny = x + j, y + i
+        if nx < 0 or ny < 0 or nx >= len(image) or ny >= len(image[nx]):
+            yield default
+        else:
+            yield image[ny][nx]
 
 
 def enhance(enhancement, image, n):
-    new_image = []
+    enhanced_image = []
     for y in range(-1, len(image) + 1):
-        new_image.append([])
+        enhanced_image.append([])
         for x in range(-1, len(image[0]) + 1):
             pixels = list(iter_pixels(image, x, y, enhancement[0] and n % 2 != 0))
-            pixel = reduce(lambda a, b: a << 1 | b, pixels, 0)
-            new_image[-1].append(enhancement[pixel])
-    return new_image
+            enhanced_pixel = reduce(lambda a, b: a << 1 | b, pixels, 0)
+            enhanced_image[-1].append(enhancement[enhanced_pixel])
+    return enhanced_image
 
 
 def count_lit_pixels(image):
