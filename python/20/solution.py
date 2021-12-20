@@ -1,7 +1,6 @@
 import sys
-from collections import *
-from functools import *
-from itertools import *
+from functools import reduce
+from itertools import product
 
 
 def read_input():
