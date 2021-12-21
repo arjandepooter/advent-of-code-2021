@@ -1,5 +1,6 @@
 import sys
 from functools import cache
+from itertools import product, repeat
 from typing import Iterator, TextIO, Tuple
 
 
@@ -21,34 +22,17 @@ def die() -> Iterator[int]:
 
 
 @cache
-def play(p1: int, p2: int, s1: int = 0, s2: int = 0, r: int = -1) -> Tuple[int, int]:
-    if r % 6 == 0:
-        s2 += p2
-        if s2 >= 21:
-            return (0, 1)
-        r = 0
-    elif r % 3 == 0:
-        s1 += p1
-        if s1 >= 21:
-            return (1, 0)
+def play(p1: int, p2: int, s1: int = 0, s2: int = 0) -> Tuple[int, int]:
+    if s2 >= 21:
+        return (0, 1)
 
-    # dirty fix for not updating score in the first call
-    if r == -1:
-        r = 0
+    w1, w2 = (0, 0)
+    for delta in map(sum, product(*repeat(range(1, 4), 3))):
+        np1 = np(p1 + delta)
+        n2, n1 = play(p2, np1, s2, s1 + np1)
+        w1, w2 = w1 + n1, w2 + n2
 
-    w1 = w2 = 0
-    for die in range(1, 4):
-        n1, n2 = play(
-            np(p1 + die if (0 <= r <= 2) else p1),
-            np(p2 + die if (3 <= r <= 5) else p2),
-            s1,
-            s2,
-            r + 1,
-        )
-        w1 += n1
-        w2 += n2
-
-    return (w1, w2)
+    return w1, w2
 
 
 def part_1(p1: int, p2: int) -> int:
