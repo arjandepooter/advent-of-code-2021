@@ -1,4 +1,5 @@
 import sys
+from collections import Counter
 from functools import cache
 from itertools import product, repeat
 from typing import Iterator, TextIO, Tuple
@@ -10,15 +11,19 @@ def read_input(input: TextIO) -> Tuple[int, int]:
     return (p1, p2)
 
 
-def np(p: int) -> int:
-    return ((p - 1) % 10) + 1
-
-
 def die() -> Iterator[int]:
     d = 0
     while True:
         yield d + 1
         d = (d + 1) % 100
+
+
+# pre-cached dice permutation counts
+permutations = Counter(map(sum, product(*repeat(range(1, 4), 3))))
+
+
+def np(p: int) -> int:
+    return ((p - 1) % 10) + 1
 
 
 @cache
@@ -27,10 +32,10 @@ def play(p1: int, p2: int, s1: int = 0, s2: int = 0) -> Tuple[int, int]:
         return (0, 1)
 
     w1, w2 = (0, 0)
-    for delta in map(sum, product(*repeat(range(1, 4), 3))):
+    for delta, n in permutations.items():
         np1 = np(p1 + delta)
         n2, n1 = play(p2, np1, s2, s1 + np1)
-        w1, w2 = w1 + n1, w2 + n2
+        w1, w2 = w1 + n * n1, w2 + n * n2
 
     return w1, w2
 
