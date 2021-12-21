@@ -52,8 +52,6 @@ def play(p1: int, p2: int, s1: int = 0, s2: int = 0, r: int = -1) -> Tuple[int, 
 
 
 def part_1(p1: int, p2: int) -> int:
-    p1 = p1
-    p2 = p2
     s1 = s2 = 0
     dice = die()
     rolls = 0
@@ -62,8 +60,7 @@ def part_1(p1: int, p2: int) -> int:
         p1 = np(p1 + next(dice) + next(dice) + next(dice))
         s1 += p1
         rolls += 3
-        p1, p2 = p2, p1
-        s1, s2 = s2, s1
+        p1, p2, s1, s2 = p2, p1, s2, s1
 
     return rolls * min(s1, s2)
 
